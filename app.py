@@ -10,6 +10,7 @@ print("Wczytuję model...")
 
 model = joblib.load('model.pkl')
 #train_accuracy = model.score(iris.data, iris.target)
+
 #print(f"Model gotowy! Accuracy: {train_accuracy}")
 
 # Nazwy gatunków
@@ -187,6 +188,46 @@ def model_info():
     })
 
 
+@app.route('/predict_batch', methods=['POST'])
+def predict_batch():
+    """
+    Endpoint do predykcji dla wielu irysów na raz.
+    """
+    # 1. Pobieramy cały JSON
+    request_data = request.get_json()
+
+    # Upewniamy się, że klucz "data" istnieje
+    if 'data' not in request_data:
+        return jsonify({"error": "Missing 'data' key"}), 400
+
+    input_list = request_data['data']
+
+    # 2. Przekształcamy listę słowników na macierz (listę list)
+    # Scikit-learn potrzebuje formatu: [[5.1, 3.5...], [6.0, 2.7...]]
+    features = []
+    for item in input_list:
+        features.append([
+            item['sepal_length'],
+            item['sepal_width'],
+            item['petal_length'],
+            item['petal_width']
+        ])
+
+    # 3. Wykonujemy predykcję DLA WSZYSTKICH naraz (Vectorization)
+    # To jest ten moment, gdzie model dostaje np. 50 wierszy i zwraca 50 wyników
+    predictions = model.predict(features)
+    probabilities = model.predict_proba(features)
+
+    # 4. Pakujemy wyniki z powrotem do ładnego JSON-a
+    results = []
+    for i in range(len(predictions)):
+        results.append({
+            "input_index": i,
+            "species": SPECIES[predictions[i]],
+            "probability": round(float(probabilities[i].max()), 3)
+        })
+
+    return jsonify(results)
 
 
 if __name__ == '__main__':
