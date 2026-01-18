@@ -2,6 +2,11 @@ from flask import Flask, request, jsonify
 import joblib
 import numpy as np
 from flasgger import Swagger
+import matplotlib
+matplotlib.use('Agg') # Ważne dla serwera bez ekranu (Azure)
+import matplotlib.pyplot as plt
+import io
+import base64
 
 # Tworzymy aplikację Flask
 app = Flask(__name__)
@@ -257,6 +262,82 @@ def predict_batch_zajecia():
 
     return jsonify({"predictions": results})
 
+
+@app.route('/plot', methods=['POST'])
+def plot_iris():
+    """
+    Generuje wykres pozycji irysa na tle danych treningowych.
+
+    Ten endpoint przyjmuje wymiary działek kielicha (sepal), generuje wykres
+    w bibliotece Matplotlib, a następnie zwraca go jako ciąg znaków Base64.
+    ---
+    tags:
+      - Wizualizacja
+    parameters:
+      - name: body
+        in: body
+        required: true
+        description: Dane wejściowe do wygenerowania punktu na wykresie
+        schema:
+          type: object
+          required:
+            - sepal_length
+            - sepal_width
+          properties:
+            sepal_length:
+              type: number
+              description: Długość działki kielicha
+              example: 5.8
+            sepal_width:
+              type: number
+              description: Szerokość działki kielicha
+              example: 2.7
+    responses:
+      200:
+        description: Sukces - wykres wygenerowany
+        schema:
+          type: object
+          properties:
+            image_base64:
+              type: string
+              description: Obrazek PNG zakodowany w formacie Base64
+              example: "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+            html_snippet:
+              type: string
+              description: Gotowy kod HTML do wstawienia na stronę
+              example: '<img src="data:image/png;base64,iVBORw...">'
+    """
+    data = request.get_json()
+    sl = data['sepal_length']
+    sw = data['sepal_width']
+
+    # Tworzymy wykres
+    plt.figure(figsize=(6, 4))
+
+    # Rysujemy przykładowe tło (tu uproszczone, normalnie wziąłbyś dane treningowe)
+    plt.scatter([5.0, 6.0, 7.0], [3.5, 3.0, 3.2], c='gray', label='Dane treningowe')
+
+    # Rysujemy punkt użytkownika na czerwono
+    plt.scatter([sl], [sw], c='red', s=100, label='Twój irys')
+
+    plt.xlabel('Sepal Length')
+    plt.ylabel('Sepal Width')
+    plt.legend()
+    plt.title('Gdzie jest Twój irys?')
+
+    # Zapisujemy wykres do bufora pamięci (zamiast pliku)
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+
+    # Kodujemy do base64, żeby wysłać w JSONie
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()  # Sprzątamy pamięć
+
+    return jsonify({
+        "image_base64": plot_url,
+        "html_snippet": f'<img src="data:image/png;base64,{plot_url}">'
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
