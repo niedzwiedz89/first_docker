@@ -111,7 +111,7 @@ def form():
         
         <div id="plot_cont" style="display:none">
             <h3> Wizualizacja: </h3>
-            <img id="iris_plot src="" alt="Wykres irysa" >
+            <img id="iris_plot" src="" alt="Wykres irysa" >
         </div>
         
         <script>
