@@ -230,7 +230,7 @@ def predict_batch():
     return jsonify(results)
 
 @app.route('/predict_batch_zajecia', methods=['POST'])
-def predict_batch():
+def predict_batch_zajecia():
     data = request.get_json()
 
     features = np.array([
@@ -251,3 +251,4 @@ def predict_batch():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
