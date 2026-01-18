@@ -99,12 +99,20 @@ def form():
     </head>
     <body>
         <h1> Klasyfikator irysów </h1>
+        
         <input id = "sl" type="number" value="5.1" placeholder="sepal_length"><br>
         <input id = "sw" type="number" value="3.1" placeholder="sepal_width"><br>
         <input id = "pl" type="number" value="1.4" placeholder="petal_length"><br>
         <input id =  "pw" type="number" value="0.1" placeholder="petal_width"><br>
+        
         <button onclick="predict()">Predykcja</button>
-        <h2 id= "result"></h2>
+        
+        <h2 id="result"> </h2>
+        
+        <div id="plot_cont" style="display:none">
+            <h3> Wizualizacja: </h3>
+            <img id="iris_plot src="" alt="Wykres irysa" >
+        </div>
         
         <script>
             async function predict(){
@@ -124,6 +132,32 @@ def form():
                 const result = await res.json()
                 
                 document.getElementById('result').innerText = 'Gatunetk: ' + result.species + ' (Prawdopodobieństwo: ' + (result.probability*100) + '%)'
+                
+                try {
+                const resPlot = await fetch('/plot', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data) // Wysyłamy te same dane
+                    })
+                    
+                    if (resPlot.ok) {
+                        const plotResult = await resPlot.json()
+                        
+                        // Znajdujemy obrazek w HTML
+                        const imgTag = document.getElementById('iris_plot');
+                        const container = document.getElementById('plot_cont');
+                        
+                        // Wstawiamy Base64 do src. 
+                        // Format to: data:image/png;base64, + Twój ciąg znaków
+                        imgTag.src = 'data:image/png;base64,' + plotResult.image_base64;
+                        
+                        // Odkrywamy obrazek
+                        container.style.display = 'block';
+                
+                }
+                catch(e) {
+                   console.error("Błąd pobierania wykresu:", e);
+                }
                 
             }
         </script>
