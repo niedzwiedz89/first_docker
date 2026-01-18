@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+from flasgger import Swagger
 
 # Tworzymy aplikację Flask
 app = Flask(__name__)
+swagger = Swagger(app)
 
 # Trenujemy model przy starcie aplikacji
 print("Wczytuję model...")
@@ -24,15 +26,22 @@ def health():
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    Endpoint do predykcji gatunku irysa
-
-    Oczekuje JSON:
-    {
-        "sepal_length": 5.1,
-        "sepal_width": 3.5,
-        "petal_length": 1.4,
-        "petal_width": 0.2
-    }
+    To jest opis dla Swaggera.
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            sepal_length: {type: number, example: 5.1}
+            sepal_width: {type: number, example: 3.5}
+            petal_length: {type: number, example: 1.4}
+            petal_width: {type: number, example: 0.2}
+    responses:
+      200:
+        description: Wynik predykcji
     """
     # Pobierz dane z requestu
     data = request.get_json()
