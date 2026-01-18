@@ -154,11 +154,11 @@ def form():
                         // Odkrywamy obrazek
                         container.style.display = 'block';
                 
-                }
+                    }
+                }    
                 catch(e) {
                    console.error("Błąd pobierania wykresu:", e);
-                }
-                
+                } 
             }
         </script>
     </body>
